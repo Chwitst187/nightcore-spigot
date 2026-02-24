@@ -45,6 +45,10 @@ public abstract class UserTemplate {
     public boolean isHolder(@NonNull CommandSender sender) {
         return sender instanceof Player player && this.isHolder(player.getUniqueId());
     }
+
+    public boolean isHolder(@NonNull Player player) {
+        return this.isHolder(player.getUniqueId());
+    }
     
     public boolean isHolder(@NonNull OfflinePlayer player) {
         return this.isHolder(player.getUniqueId());
