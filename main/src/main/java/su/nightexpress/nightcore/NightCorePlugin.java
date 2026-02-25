@@ -20,8 +20,10 @@ import su.nightexpress.nightcore.language.LangManager;
 import su.nightexpress.nightcore.locale.LangContainer;
 import su.nightexpress.nightcore.locale.LangElement;
 import su.nightexpress.nightcore.ui.inventory.MenuRegistry;
+import su.nightexpress.nightcore.bridge.scheduler.AdaptedTask;
 import su.nightexpress.nightcore.util.wrapper.UniTask;
 
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public interface NightCorePlugin extends Plugin {
@@ -140,32 +142,44 @@ public interface NightCorePlugin extends Plugin {
 
     @Deprecated
     default void runTask(@NotNull Consumer<BukkitTask> consumer) {
-        this.getScheduler().runTask(this, consumer);
+        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
+        AdaptedTask task = this.scheduler().runTask(() -> consumer.accept(taskRef.get()));
+        taskRef.set(new DelegatingBukkitTask(task, true));
     }
 
     @Deprecated
     default void runTaskAsync(@NotNull Consumer<BukkitTask> consumer) {
-        this.getScheduler().runTaskAsynchronously(this, consumer);
+        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
+        AdaptedTask task = this.scheduler().runTaskAsync(() -> consumer.accept(taskRef.get()));
+        taskRef.set(new DelegatingBukkitTask(task, false));
     }
 
     @Deprecated
     default void runTaskLater(@NotNull Consumer<BukkitTask> consumer, long delay) {
-        this.getScheduler().runTaskLater(this, consumer, delay);
+        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
+        AdaptedTask task = this.scheduler().runTaskLater(() -> consumer.accept(taskRef.get()), delay);
+        taskRef.set(new DelegatingBukkitTask(task, true));
     }
 
     @Deprecated
     default void runTaskLaterAsync(@NotNull Consumer<BukkitTask> consumer, long delay) {
-        this.getScheduler().runTaskLaterAsynchronously(this, consumer, delay);
+        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
+        AdaptedTask task = this.scheduler().runTaskLaterAsync(() -> consumer.accept(taskRef.get()), delay);
+        taskRef.set(new DelegatingBukkitTask(task, false));
     }
 
     @Deprecated
     default void runTaskTimer(@NotNull Consumer<BukkitTask> consumer, long delay, long interval) {
-        this.getScheduler().runTaskTimer(this, consumer, delay, interval);
+        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
+        AdaptedTask task = this.scheduler().runTaskTimer(() -> consumer.accept(taskRef.get()), delay, interval);
+        taskRef.set(new DelegatingBukkitTask(task, true));
     }
 
     @Deprecated
     default void runTaskTimerAsync(@NotNull Consumer<BukkitTask> consumer, long delay, long interval) {
-        this.getScheduler().runTaskTimerAsynchronously(this, consumer, delay, interval);
+        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
+        AdaptedTask task = this.scheduler().runTaskTimerAsync(() -> consumer.accept(taskRef.get()), delay, interval);
+        taskRef.set(new DelegatingBukkitTask(task, false));
     }
 
     @NotNull
@@ -178,5 +192,41 @@ public interface NightCorePlugin extends Plugin {
     @Deprecated
     default UniTask createAsyncTask(@NotNull Runnable runnable) {
         return this.createTask(runnable).setAsync();
+    }
+
+    class DelegatingBukkitTask implements BukkitTask {
+
+        private final AdaptedTask backend;
+        private final boolean     sync;
+
+        public DelegatingBukkitTask(@NotNull AdaptedTask backend, boolean sync) {
+            this.backend = backend;
+            this.sync = sync;
+        }
+
+        @Override
+        public int getTaskId() {
+            return -1;
+        }
+
+        @Override
+        public @NotNull Plugin getOwner() {
+            return this.backend.getOwningPlugin();
+        }
+
+        @Override
+        public boolean isSync() {
+            return this.sync;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return this.backend.isCancelled();
+        }
+
+        @Override
+        public void cancel() throws IllegalStateException {
+            this.backend.cancel();
+        }
     }
 }
