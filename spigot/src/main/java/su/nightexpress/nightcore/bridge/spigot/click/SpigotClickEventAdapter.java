@@ -1,7 +1,6 @@
 package su.nightexpress.nightcore.bridge.spigot.click;
 
 import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ClickEventCustom;
 import net.md_5.bungee.api.dialog.Dialog;
 import net.md_5.bungee.api.dialog.chat.ShowDialogClickEvent;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +38,13 @@ public class SpigotClickEventAdapter {
 
         @NotNull
         public static ClickEvent fromCustom(@NotNull WrappedPayload.Custom custom) {
-            return new ClickEventCustom(custom.key().value(), custom.nbt().asString());
+            try {
+                Class<?> clazz = Class.forName("net.md_5.bungee.api.chat.ClickEventCustom");
+                return (ClickEvent) clazz.getConstructor(String.class, String.class).newInstance(custom.key().value(), custom.nbt().asString());
+            }
+            catch (Exception exception) {
+                return new ClickEvent(ClickEvent.Action.RUN_COMMAND, "");
+            }
         }
 
         @NotNull

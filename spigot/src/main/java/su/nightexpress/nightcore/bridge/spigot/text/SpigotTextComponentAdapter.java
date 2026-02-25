@@ -31,6 +31,7 @@ import su.nightexpress.nightcore.util.Version;
 import su.nightexpress.nightcore.util.bridge.wrapper.NightComponent;
 
 import java.awt.*;
+import java.lang.reflect.Constructor;
 import java.util.List;
 
 public class SpigotTextComponentAdapter implements TextComponentAdapter<BaseComponent> {
@@ -164,8 +165,32 @@ public class SpigotTextComponentAdapter implements TextComponentAdapter<BaseComp
     @Override
     @NotNull
     public BaseComponent adaptComponent(@NotNull NightObjectComponent component) {
-        ObjectComponent spigot = new ObjectComponent(SpigotObjectContentsAdapter.get().adaptContents(component.contents()));
+        BaseComponent spigot = this.adaptObjectComponent(component);
         this.adaptProperties(spigot, component);
         return spigot;
+    }
+
+    @NotNull
+    private BaseComponent adaptObjectComponent(@NotNull NightObjectComponent component) {
+        try {
+            Class<?> objectComponentClass = Class.forName("net.md_5.bungee.api.chat.ObjectComponent");
+            Object object = SpigotObjectContentsAdapter.get().adaptContents(component.contents());
+
+            if (object == null) {
+                return new TextComponent("");
+            }
+
+            for (Constructor<?> constructor : objectComponentClass.getConstructors()) {
+                if (constructor.getParameterCount() != 1) continue;
+                if (!constructor.getParameterTypes()[0].isAssignableFrom(object.getClass())) continue;
+
+                return (BaseComponent) constructor.newInstance(object);
+            }
+
+            return new TextComponent("");
+        }
+        catch (Exception exception) {
+            return new TextComponent("");
+        }
     }
 }
