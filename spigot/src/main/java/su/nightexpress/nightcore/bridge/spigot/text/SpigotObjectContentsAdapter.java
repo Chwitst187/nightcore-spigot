@@ -1,18 +1,18 @@
 package su.nightexpress.nightcore.bridge.spigot.text;
 
-import net.md_5.bungee.api.chat.objects.ChatObject;
-import net.md_5.bungee.api.chat.objects.PlayerObject;
-import net.md_5.bungee.api.chat.objects.SpriteObject;
-import net.md_5.bungee.api.chat.player.Profile;
-import net.md_5.bungee.api.chat.player.Property;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import su.nightexpress.nightcore.bridge.text.adapter.ObjectContentsAdapter;
 import su.nightexpress.nightcore.bridge.text.contents.NightObjectContents;
 import su.nightexpress.nightcore.bridge.text.contents.NightPlayerHeadObjectContents;
 import su.nightexpress.nightcore.bridge.text.contents.NightSpriteObjectContents;
 import su.nightexpress.nightcore.util.Lists;
 
-public class SpigotObjectContentsAdapter implements ObjectContentsAdapter<ChatObject> {
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+public class SpigotObjectContentsAdapter implements ObjectContentsAdapter<Object> {
 
     private static SpigotObjectContentsAdapter instance;
 
@@ -26,25 +26,74 @@ public class SpigotObjectContentsAdapter implements ObjectContentsAdapter<ChatOb
 
     @Override
     @NotNull
-    public ChatObject adaptContents(@NotNull NightObjectContents contents) {
+    public Object adaptContents(@NotNull NightObjectContents contents) {
         return contents.adapt(this);
     }
 
     @Override
-    @NotNull
-    public ChatObject adaptContents(@NotNull NightSpriteObjectContents contents) {
-        return new SpriteObject(contents.atlas().asString(), contents.sprite().value());
+    @Nullable
+    public Object adaptContents(@NotNull NightSpriteObjectContents contents) {
+        return this.newSpriteObject(contents.atlas().asString(), contents.sprite().value());
     }
 
     @Override
-    @NotNull
-    public ChatObject adaptContents(@NotNull NightPlayerHeadObjectContents contents) {
-        Profile profile = new Profile(contents.name(), contents.id(), Lists.modify(contents.profileProperties(), this::adaptProfilePropery).toArray(new Property[0]));
-        return new PlayerObject(profile, contents.hat());
+    @Nullable
+    public Object adaptContents(@NotNull NightPlayerHeadObjectContents contents) {
+        Object profile = this.newProfile(contents.name(), contents.id(), Lists.modify(contents.profileProperties(), this::adaptProfileProperty));
+        if (profile == null) return null;
+
+        return this.newPlayerObject(profile, contents.hat());
     }
 
-    @NotNull
-    private Property adaptProfilePropery(@NotNull NightPlayerHeadObjectContents.NightProfileProperty property) {
-        return new Property(property.name(), property.value(), property.signature());
+    @Nullable
+    private Object adaptProfileProperty(@NotNull NightPlayerHeadObjectContents.NightProfileProperty property) {
+        try {
+            Class<?> propertyClass = Class.forName("net.md_5.bungee.api.chat.player.Property");
+            return propertyClass.getConstructor(String.class, String.class, String.class).newInstance(property.name(), property.value(), property.signature());
+        }
+        catch (Exception exception) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private Object newSpriteObject(@NotNull String atlas, @NotNull String sprite) {
+        try {
+            Class<?> spriteObjectClass = Class.forName("net.md_5.bungee.api.chat.objects.SpriteObject");
+            return spriteObjectClass.getConstructor(String.class, String.class).newInstance(atlas, sprite);
+        }
+        catch (Exception exception) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private Object newProfile(@Nullable String name, @Nullable java.util.UUID id, @NotNull List<Object> properties) {
+        try {
+            Class<?> profileClass = Class.forName("net.md_5.bungee.api.chat.player.Profile");
+            Class<?> propertyClass = Class.forName("net.md_5.bungee.api.chat.player.Property");
+            Object propertiesArray = Array.newInstance(propertyClass, properties.size());
+
+            for (int i = 0; i < properties.size(); i++) {
+                Array.set(propertiesArray, i, properties.get(i));
+            }
+
+            Constructor<?> constructor = profileClass.getConstructor(String.class, java.util.UUID.class, propertiesArray.getClass());
+            return constructor.newInstance(name, id, propertiesArray);
+        }
+        catch (Exception exception) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private Object newPlayerObject(@NotNull Object profile, boolean hat) {
+        try {
+            Class<?> playerObjectClass = Class.forName("net.md_5.bungee.api.chat.objects.PlayerObject");
+            return playerObjectClass.getConstructor(profile.getClass(), boolean.class).newInstance(profile, hat);
+        }
+        catch (Exception exception) {
+            return null;
+        }
     }
 }
