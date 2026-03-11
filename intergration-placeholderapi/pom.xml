@@ -19,6 +19,11 @@
 
     <repositories>
         <repository>
+            <id>mojang-libraries</id>
+            <url>https://libraries.minecraft.net/</url>
+        </repository>
+
+        <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
