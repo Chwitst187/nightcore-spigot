@@ -1,7 +1,10 @@
 package su.nightexpress.nightcore.commands.argument.type;
 
+import java.util.List;
+
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+
 import su.nightexpress.nightcore.commands.SuggestionsProvider;
 import su.nightexpress.nightcore.commands.argument.ArgumentReader;
 import su.nightexpress.nightcore.commands.argument.ArgumentType;
@@ -11,13 +14,12 @@ import su.nightexpress.nightcore.commands.exceptions.CommandSyntaxException;
 import su.nightexpress.nightcore.core.config.CoreLang;
 import su.nightexpress.nightcore.util.Players;
 
-import java.util.List;
-
 public class PlayerArgumentType implements ArgumentType<Player>, SuggestionsProvider {
 
     @Override
-    @NotNull
-    public Player parse(@NotNull CommandContextBuilder contextBuilder, @NotNull String string) throws CommandSyntaxException {
+    @NonNull
+    public Player parse(@NonNull CommandContextBuilder contextBuilder, @NonNull String string)
+            throws CommandSyntaxException {
         Player player = Players.getPlayer(string);
         if (player == null) throw CommandSyntaxException.custom(CoreLang.ERROR_INVALID_PLAYER);
 
@@ -25,8 +27,8 @@ public class PlayerArgumentType implements ArgumentType<Player>, SuggestionsProv
     }
 
     @Override
-    @NotNull
-    public List<String> suggest(@NotNull ArgumentReader reader, @NotNull CommandContext context) {
+    @NonNull
+    public List<String> suggest(@NonNull ArgumentReader reader, @NonNull CommandContext context) {
         return context.getSender() instanceof Player player ? Players.playerNames(player) : Players.playerNames();
     }
 }
