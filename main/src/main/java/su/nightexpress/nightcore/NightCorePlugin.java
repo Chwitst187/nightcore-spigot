@@ -1,5 +1,7 @@
 package su.nightexpress.nightcore;
 
+import java.util.function.Consumer;
+
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -9,7 +11,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
+
 import su.nightexpress.nightcore.bridge.chat.UniversalChatEventHandler;
 import su.nightexpress.nightcore.bridge.scheduler.AdaptedScheduler;
 import su.nightexpress.nightcore.command.CommandManager;
@@ -21,11 +24,7 @@ import su.nightexpress.nightcore.locale.LangContainer;
 import su.nightexpress.nightcore.locale.LangElement;
 import su.nightexpress.nightcore.ui.dialog.wrap.DialogRegistry;
 import su.nightexpress.nightcore.ui.inventory.MenuRegistry;
-import su.nightexpress.nightcore.bridge.scheduler.AdaptedTask;
 import su.nightexpress.nightcore.util.wrapper.UniTask;
-
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 public interface NightCorePlugin extends Plugin {
 
@@ -39,197 +38,161 @@ public interface NightCorePlugin extends Plugin {
     NightPluginCommand getBaseCommand();
 
     @Override
-    @NotNull FileConfig getConfig();
+    @NonNull
+    FileConfig getConfig();
 
     @Deprecated
-    @NotNull FileConfig getLang();
+    @NonNull
+    FileConfig getLang();
 
-    @NotNull PluginDetails getDetails();
+    @NonNull
+    PluginDetails getDetails();
 
-    void extractResources(@NotNull String jarPath);
+    void extractResources(@NonNull String jarPath);
 
-    void extractResources(@NotNull String jarParh, @NotNull String toPath);
+    void extractResources(@NonNull String jarParh, @NonNull String toPath);
 
-    void injectLang(@NotNull Class<? extends LangContainer> langClass);
+    void injectLang(@NonNull Class<? extends LangContainer> langClass);
 
     /**
-     * Saves and loads {@link LangElement} objects from the provided {@link LangContainer} object into the lang config file according to selected
-     * language during the "enable" plugin's phase if the same can not be achieved through {@link NightPlugin#registerLang(Class)}
+     * Saves and loads {@link LangElement} objects from the provided {@link LangContainer} object into the lang config
+     * file according to selected
+     * language during the "enable" plugin's phase if the same can not be achieved through
+     * {@link NightPlugin#registerLang(Class)}
      * <br>
      * <b>Note:</b> This can not be used outside of the {@link NightPlugin#enable()} phase.
+     * 
      * @param langContainer LangContainer object with some LangElement fields defined.
      * @see NightPlugin#registerLang(Class)
      */
-    void injectLang(@NotNull LangContainer langContainer);
+    void injectLang(@NonNull LangContainer langContainer);
 
-    @NotNull
+    @NonNull
     default String getNameLocalized() {
         return this.getDetails().getName();
     }
 
-    @NotNull
+    @NonNull
     default String getPrefix() {
         return this.getDetails().getPrefix();
     }
 
-    @NotNull
+    @NonNull
     default String[] getCommandAliases() {
         return this.getDetails().getCommandAliases();
     }
 
-    @NotNull
+    @NonNull
     @Deprecated
     default String getLanguage() {
         return this.getDetails().getLanguage();
     }
 
-    default void info(@NotNull String msg) {
+    default void info(@NonNull String msg) {
         this.getLogger().info(msg);
     }
 
-    default void warn(@NotNull String msg) {
+    default void warn(@NonNull String msg) {
         this.getLogger().warning(msg);
     }
 
-    default void error(@NotNull String msg) {
+    default void error(@NonNull String msg) {
         this.getLogger().severe(msg);
     }
 
-    default void debug(@NotNull String msg) {
+    default void debug(@NonNull String msg) {
         this.info("[DEBUG] " + msg);
     }
 
-    void registerListener(@NotNull Listener listener);
+    void registerListener(@NonNull Listener listener);
 
-    void addChatHandler(@NotNull EventPriority priority, @NotNull UniversalChatEventHandler handler);
+    void addChatHandler(@NonNull EventPriority priority, @NonNull UniversalChatEventHandler handler);
 
-    void removeChatHandler(@NotNull UniversalChatEventHandler handler);
-
-    @Deprecated
-    @NotNull LangManager getLangManager();
+    void removeChatHandler(@NonNull UniversalChatEventHandler handler);
 
     @Deprecated
-    @NotNull CommandManager getCommandManager();
-
-    @NotNull MenuRegistry getMenuRegistry();
+    @NonNull
+    LangManager getLangManager();
 
     @Deprecated
-    @NotNull
+    @NonNull
+    CommandManager getCommandManager();
+
+    @NonNull
+    MenuRegistry getMenuRegistry();
+
+    @Deprecated
+    @NonNull
     default BukkitScheduler getScheduler() {
         return this.getServer().getScheduler();
     }
 
-    @NotNull AdaptedScheduler scheduler();
+    @NonNull
+    AdaptedScheduler scheduler();
 
-    @NotNull DialogRegistry dialogRegistry();
+    @NonNull
+    DialogRegistry dialogRegistry();
 
-    @NotNull PluginManager getPluginManager();
+    @NonNull
+    PluginManager getPluginManager();
 
-    void runTask(@NotNull Runnable consumer);
+    void runTask(@NonNull Runnable consumer);
 
-    void runTask(Entity entity, @NotNull Runnable consumer);
+    void runTask(Entity entity, @NonNull Runnable consumer);
 
-    void runTask(Location location, @NotNull Runnable consumer);
+    void runTask(Location location, @NonNull Runnable consumer);
 
-    void runTask(Chunk chunk, @NotNull Runnable consumer);
+    void runTask(Chunk chunk, @NonNull Runnable consumer);
 
-    void runTaskAsync(@NotNull Runnable consumer);
+    void runTaskAsync(@NonNull Runnable consumer);
 
-    void runTaskLater(@NotNull Runnable consumer, long delay);
+    void runTaskLater(@NonNull Runnable consumer, long delay);
 
-    void runTaskLaterAsync(@NotNull Runnable consumer, long delay);
+    void runTaskLaterAsync(@NonNull Runnable consumer, long delay);
 
-    void runTaskTimer(@NotNull Runnable consumer, long delay, long interval);
+    void runTaskTimer(@NonNull Runnable consumer, long delay, long interval);
 
-    void runTaskTimerAsync(@NotNull Runnable consumer, long delay, long interval);
+    void runTaskTimerAsync(@NonNull Runnable consumer, long delay, long interval);
 
     @Deprecated
-    default void runTask(@NotNull Consumer<BukkitTask> consumer) {
-        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
-        AdaptedTask task = this.scheduler().runTask(() -> consumer.accept(taskRef.get()));
-        taskRef.set(new DelegatingBukkitTask(task, true));
+    default void runTask(@NonNull Consumer<BukkitTask> consumer) {
+        this.getScheduler().runTask(this, consumer);
     }
 
     @Deprecated
-    default void runTaskAsync(@NotNull Consumer<BukkitTask> consumer) {
-        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
-        AdaptedTask task = this.scheduler().runTaskAsync(() -> consumer.accept(taskRef.get()));
-        taskRef.set(new DelegatingBukkitTask(task, false));
+    default void runTaskAsync(@NonNull Consumer<BukkitTask> consumer) {
+        this.getScheduler().runTaskAsynchronously(this, consumer);
     }
 
     @Deprecated
-    default void runTaskLater(@NotNull Consumer<BukkitTask> consumer, long delay) {
-        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
-        AdaptedTask task = this.scheduler().runTaskLater(() -> consumer.accept(taskRef.get()), delay);
-        taskRef.set(new DelegatingBukkitTask(task, true));
+    default void runTaskLater(@NonNull Consumer<BukkitTask> consumer, long delay) {
+        this.getScheduler().runTaskLater(this, consumer, delay);
     }
 
     @Deprecated
-    default void runTaskLaterAsync(@NotNull Consumer<BukkitTask> consumer, long delay) {
-        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
-        AdaptedTask task = this.scheduler().runTaskLaterAsync(() -> consumer.accept(taskRef.get()), delay);
-        taskRef.set(new DelegatingBukkitTask(task, false));
+    default void runTaskLaterAsync(@NonNull Consumer<BukkitTask> consumer, long delay) {
+        this.getScheduler().runTaskLaterAsynchronously(this, consumer, delay);
     }
 
     @Deprecated
-    default void runTaskTimer(@NotNull Consumer<BukkitTask> consumer, long delay, long interval) {
-        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
-        AdaptedTask task = this.scheduler().runTaskTimer(() -> consumer.accept(taskRef.get()), delay, interval);
-        taskRef.set(new DelegatingBukkitTask(task, true));
+    default void runTaskTimer(@NonNull Consumer<BukkitTask> consumer, long delay, long interval) {
+        this.getScheduler().runTaskTimer(this, consumer, delay, interval);
     }
 
     @Deprecated
-    default void runTaskTimerAsync(@NotNull Consumer<BukkitTask> consumer, long delay, long interval) {
-        AtomicReference<BukkitTask> taskRef = new AtomicReference<>();
-        AdaptedTask task = this.scheduler().runTaskTimerAsync(() -> consumer.accept(taskRef.get()), delay, interval);
-        taskRef.set(new DelegatingBukkitTask(task, false));
+    default void runTaskTimerAsync(@NonNull Consumer<BukkitTask> consumer, long delay, long interval) {
+        this.getScheduler().runTaskTimerAsynchronously(this, consumer, delay, interval);
     }
 
-    @NotNull
+    @NonNull
     @Deprecated
-    default UniTask createTask(@NotNull Runnable runnable) {
+    default UniTask createTask(@NonNull Runnable runnable) {
         return new UniTask(this, runnable);
     }
 
-    @NotNull
+    @NonNull
     @Deprecated
-    default UniTask createAsyncTask(@NotNull Runnable runnable) {
+    default UniTask createAsyncTask(@NonNull Runnable runnable) {
         return this.createTask(runnable).setAsync();
-    }
-
-    class DelegatingBukkitTask implements BukkitTask {
-
-        private final AdaptedTask backend;
-        private final boolean     sync;
-
-        public DelegatingBukkitTask(@NotNull AdaptedTask backend, boolean sync) {
-            this.backend = backend;
-            this.sync = sync;
-        }
-
-        @Override
-        public int getTaskId() {
-            return -1;
-        }
-
-        @Override
-        public @NotNull Plugin getOwner() {
-            return this.backend.getOwningPlugin();
-        }
-
-        @Override
-        public boolean isSync() {
-            return this.sync;
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return this.backend.isCancelled();
-        }
-
-        @Override
-        public void cancel() throws IllegalStateException {
-            this.backend.cancel();
-        }
     }
 }
