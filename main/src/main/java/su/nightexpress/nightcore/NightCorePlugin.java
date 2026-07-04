@@ -1,11 +1,13 @@
 package su.nightexpress.nightcore;
 
+import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
@@ -13,8 +15,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import su.nightexpress.nightcore.bridge.chat.UniversalChatEventHandler;
+import su.nightexpress.nightcore.bridge.permission.PermissionNamespace;
 import su.nightexpress.nightcore.bridge.scheduler.AdaptedScheduler;
 import su.nightexpress.nightcore.command.CommandManager;
 import su.nightexpress.nightcore.command.api.NightPluginCommand;
@@ -23,6 +27,7 @@ import su.nightexpress.nightcore.config.PluginDetails;
 import su.nightexpress.nightcore.language.LangManager;
 import su.nightexpress.nightcore.locale.LangContainer;
 import su.nightexpress.nightcore.locale.LangElement;
+import su.nightexpress.nightcore.ui.dialog.wrap.DialogKey;
 import su.nightexpress.nightcore.ui.dialog.wrap.DialogRegistry;
 import su.nightexpress.nightcore.ui.inventory.MenuRegistry;
 import su.nightexpress.nightcore.util.wrapper.UniTask;
@@ -48,6 +53,10 @@ public interface NightCorePlugin extends Plugin {
 
     @NonNull
     PluginDetails getDetails();
+
+    Path dataPath();
+
+    void registerPermissions(PermissionNamespace namespace);
 
     void extractResources(@NonNull String jarPath);
 
@@ -144,6 +153,9 @@ public interface NightCorePlugin extends Plugin {
 
     @NonNull
     PluginManager getPluginManager();
+
+    <T> void showDialog(@NonNull Player player, @NonNull DialogKey<T> key, @NonNull T data,
+                        @Nullable Runnable callback);
 
     void runTask(@NonNull Runnable consumer);
 
